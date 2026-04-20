@@ -1,5 +1,5 @@
 # Lab-tong-hop
-
+![](sodo.png)
 ## LAN Local
 ![](Lanneo.png)
 ### L2 - Switching
@@ -94,8 +94,47 @@
      default-information originate # Đẩy default route cho R1, R2
     !
     ip route 0.0.0.0 0.0.0.0 123.123.123.1
-
-
+    ```
+  ## WAN INTERNET
+  ![](WanNeo.png)
+  * Dùng giao thức EIGRP 1000 để định tuyến mạng WAN (nội bộ của ISP) sao cho 4 Router R4 - R5 - R6 - R7 đều có thể ping dc mạng 123.0/30 và 8.0/28 ( tức là ping dc R3 của NEO NETWORK và R8 của GOOGLE ).
+    * Cấu hình các Router tương tự nhau (R4,5,6,7)
+    ```
+     interface GigabitEthernet0/0
+     ip address 10.10.1.1 255.255.255.0
+     duplex auto
+     speed auto
+    !
+    interface GigabitEthernet0/1
+     ip address 123.123.123.1 255.255.255.252
+     duplex auto
+     speed auto
+    !
+    interface GigabitEthernet0/2
+     ip address 10.10.2.1 255.255.255.0
+     duplex auto
+     speed auto
+    !
+    interface Vlan1
+     no ip address
+     shutdown
+    !
+    router eigrp 1000
+     network 123.123.123.0 0.0.0.3
+     network 10.10.0.0 0.0.255.255
+    ```
+    * R7 thì phải **IP ROUTE* để ra mạng ngoài: ip route 172.16.1.0 255.255.255.0 8.8.8.8
+     
+  * Hiệu chỉnh : R4 ping R8 ưu tiên đi qua R4 , nếu kết nối với R4 die thì mới đi qua R5.
+  ```
+    hostname R4
+    !
+    interface g0/0 # Nối R6 (Đường ưu tiên)
+     delay 10 # Giảm delay để Metric nhỏ -> Ưu tiên
+    !
+    interface g0/1 # Nối R5 (Đường dự phòng)
+     delay 2000 # Tăng delay để Metric lớn -> Chỉ đi khi đường kia chết
+  ```
   ## LAN - GOOGLE
   ![](Lanweb.png)
   * Để máy ngoài truy cập đc web google qua ip public thì mình phải NAT Port Forwarding
